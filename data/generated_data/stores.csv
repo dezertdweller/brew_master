@@ -1,7 +1,7 @@
-store_name,city,state
-BrewMasters New York,New York,NY
-BrewMasters Austin,Austin,TX
-BrewMasters San Francisco,San Francisco,CA
-BrewMasters Denver,Denver,CO
-BrewMasters Seattle,Seattle,WA
-BrewMasters Portland,Portland,OR
+store_id,store_name,city,state
+1,BrewMasters New York,New York,NY
+2,BrewMasters Austin,Austin,TX
+3,BrewMasters San Francisco,San Francisco,CA
+4,BrewMasters Denver,Denver,CO
+5,BrewMasters Seattle,Seattle,WA
+6,BrewMasters Portland,Portland,OR
