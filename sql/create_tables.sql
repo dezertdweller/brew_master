@@ -17,7 +17,10 @@ CREATE TABLE Employees (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     position VARCHAR(50),
-    store_id INT REFERENCES Stores(store_id)
+    store_id INT REFERENCES Stores(store_id),
+    age INT,
+    gender VARCHAR(20),
+    salary DECIMAL(10, 2)
 );
 
 CREATE TABLE Customers (
@@ -44,7 +47,7 @@ CREATE TABLE Sales (
 
 CREATE TABLE Marketing_Campaigns (
     campaign_id SERIAL PRIMARY KEY,
-    campaign_name VARCHAR(100) NOT NULL,
+    campaign_name VARCHAR(255) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     budget DECIMAL(15, 2) NOT NULL

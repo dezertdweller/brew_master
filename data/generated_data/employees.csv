@@ -1,26 +1,26 @@
-first_name,last_name,position,store_id
-Daniel,Krueger,Store Manager,1
-Jose,Moreno,Sales Associate,1
-Danielle,Brooks,Brewing Expert,1
-Robert,Foster,Inventory Specialist,1
-Jennifer,Rogers,Store Manager,2
-Richard,Miller,Sales Associate,2
-Elizabeth,Juarez,Brewing Expert,2
-Jennifer,Burch,Inventory Specialist,2
-Olivia,Eaton,Store Manager,3
-Kathleen,Moore,Sales Associate,3
-Richard,Thompson,Brewing Expert,3
-Lisa,Johnson,Inventory Specialist,3
-Catherine,Wang,Store Manager,4
-Daniel,Rivera,Sales Associate,4
-Daryl,Lewis,Brewing Expert,4
-Jennifer,Allen,Inventory Specialist,4
-Joshua,Williamson,Store Manager,5
-Eric,Miller,Sales Associate,5
-Steve,Stone,Brewing Expert,5
-Jessica,Zuniga,Inventory Specialist,5
-David,Banks,Store Manager,6
-David,Ramirez,Sales Associate,6
-Elizabeth,Jackson,Brewing Expert,6
-Vincent,Boyd,Inventory Specialist,6
-N/A,N/A,No Sales Associate,9999
+first_name,last_name,position,store_id,age,gender,salary
+Isaiah,Meyer,Store Manager,1,62,Male,36797.01
+Melissa,Diaz,Sales Associate,1,28,Non-Binary,56447.42
+David,Mitchell,Brewing Expert,1,63,Other,98919.96
+Charles,Murphy,Inventory Specialist,1,30,Female,46130.77
+Eric,Kirby,Store Manager,2,38,Male,75450.73
+Jenna,Cruz,Sales Associate,2,22,Female,63812.95
+Richard,Jones,Brewing Expert,2,31,Male,94207.92
+Edward,Barton,Inventory Specialist,2,47,Male,45219.04
+Brian,Greene,Store Manager,3,56,Male,137439.76
+Keith,Costa,Sales Associate,3,54,Male,68019.99
+Karen,Williams,Brewing Expert,3,34,Male,96625.51
+Marilyn,Keller,Inventory Specialist,3,47,Male,53779.15
+Cameron,Velasquez,Store Manager,4,62,Male,122957.55
+Alex,Velasquez,Sales Associate,4,57,Male,69296.47
+Thomas,Martin,Brewing Expert,4,60,Male,94577.29
+Alicia,Lopez,Inventory Specialist,4,21,Didn't Report,51836.89
+Linda,Boyd,Store Manager,5,40,Female,111434.76
+Mark,Obrien,Sales Associate,5,46,Female,62977.53
+Katherine,Powell,Brewing Expert,5,62,Male,96045.51
+Jason,Miller,Inventory Specialist,5,64,Male,35336.41
+Jessica,Allen,Store Manager,6,24,Male,41013.65
+Katherine,Hamilton,Sales Associate,6,59,Didn't Report,50738.42
+Jeffrey,Combs,Brewing Expert,6,64,Male,95529.08
+Brandon,Davidson,Inventory Specialist,6,54,Female,54011.31
+N/A,N/A,No Sales Associate,9999,9999,N/A,0.0
