@@ -15,7 +15,7 @@ The purpose of this project is to build a relational database to track and analy
 - **Sales Data**: Dynamically generated sales transactions, linked to specific products, customers, and employees.
 
 ## Project File Structure
-
+```
 /src
   |-- generate_data.py        # Generates store, product, employee, customer, and marketing campaign data
   |-- insert_data.py          # Inserts generated data into the database (except sales)
@@ -30,7 +30,7 @@ The purpose of this project is to build a relational database to track and analy
   |-- db_connection.py        # Contains the database connection logic
 
 /README.md                    # Project documentation
-
+```
 
 ## Setup Instructions
 
