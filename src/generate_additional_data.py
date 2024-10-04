@@ -1,6 +1,7 @@
 import os
 import random
 import pandas as pd
+import numpy as np
 from faker import Faker
 from utils import get_db_connection
 
@@ -16,6 +17,78 @@ us_states = [
 ]
 
 states = ['NY', 'TX', 'CA', 'CO', 'WA', 'OR']
+
+# Temporal weights for variability
+daily_variation = {
+    "Monday": 0.8,
+    "Tuesday": 0.9,
+    "Wednesday": 0.95,
+    "Thursday": 1.0,
+    "Friday": 1.2,
+    "Saturday": 1.5,
+    "Sunday": 1.4
+}
+
+monthly_variation = {
+    '01': 1.1, 
+    '02': 0.9,
+    '06': 1.2, 
+    '07': 1.4, 
+    '12': 1.5
+}
+
+# Simulate an increasing trend over time
+def simulate_trend(sale_date):
+    """Simulate increasing sales over time, e.g., as the store grows."""
+    base_date = pd.Timestamp("2019-01-01")
+    delta_days = (pd.Timestamp(sale_date) - base_date).days
+    return 1 + (delta_days / 365) * 0.1
+
+# Define random scaling factors for each store
+store_scaling_factors = {
+    1: np.random.uniform(0.8, 1.2),  # Scale sales for store 1
+    2: np.random.uniform(0.5, 1.0),  # Scale sales for store 2
+    3: np.random.uniform(0.9, 1.5),  # Scale sales for store 3
+    4: np.random.uniform(0.6, 1.4),  # Scale sales for store 4
+    5: np.random.uniform(0.9, 1.5),  # Scale sales for store 5
+    6: np.random.uniform(0.9, 1.4),  # Scale sales for store 6
+}
+
+# Simulate economic fluctuations
+def economic_multiplier(sale_date):
+    """Simulate economic changes with random shifts over time."""
+    year = pd.Timestamp(sale_date).year
+    if year == 2020:  # Simulate pandemic downturn
+        return 0.7
+    elif year == 2021:  # Recovery period
+        return 1.2
+    return 1.0  # Normal years
+
+# Customer segmentation based on spending behavior
+def customer_segment_multiplier(segment):
+    """Return a multiplier based on customer segment."""
+    segment_multipliers = {
+        'Frequent Buyer': 1.8,
+        'First-Time': 1.0,
+        'Loyalty Member': 2.5
+    }
+    return segment_multipliers.get(segment, 1.0)
+
+# Fetch customer IDs and states from the database
+def fetch_customer_data():
+    """Fetch customer_id and state pairs from the database."""
+    conn = get_db_connection()
+    if not conn:
+        return []
+
+    cursor = conn.cursor()
+    # Query the database to get the customer_id and state
+    cursor.execute("SELECT customer_id, state FROM Customers;")
+    customer_data = cursor.fetchall()  # List of tuples (customer_id, state)
+
+    cursor.close()
+    conn.close()
+    return customer_data
 
 # Fetch employee-store pairs from the database
 def fetch_employee_store_pairs():
@@ -79,26 +152,12 @@ def fetch_product_ids():
     conn.close()
     return product_ids
 
-# Fetch customer data (customer_id and state)
-def fetch_customer_data():
-    conn = get_db_connection()
-    if not conn:
-        return []
-
-    cursor = conn.cursor()
-    cursor.execute("SELECT customer_id, state FROM Customers;")
-    customer_data = cursor.fetchall()  # List of tuples (customer_id, state)
-
-    cursor.close()
-    conn.close()
-    return customer_data
 
 # Generate sales data
 def generate_sales_data(num_sales=100):
-    """Generate sales data."""
     sales = []
 
-    # Fetch employee-store pairs, product_ids, customer data, and dummy employee ID
+    # Fetch employee-store pairs, product_ids, and customer data
     employee_store_pairs = fetch_employee_store_pairs()
     product_ids = fetch_product_ids()
     customer_data = fetch_customer_data()  # (customer_id, state) tuples
@@ -115,29 +174,58 @@ def generate_sales_data(num_sales=100):
         "Brewing Expert": 0.10
     }
 
+    # Simulate customer segments
+    customer_segments = ['Frequent Buyer', 'First-Time', 'Loyalty Member']
+
+    def generate_seasonal_multiplier():
+        """Generate a random seasonal multiplier between 0.5 and 1.8."""
+        return np.random.uniform(0.5, 1.8)
+
     for _ in range(num_sales):
         product_id = random.choice(product_ids)
         customer_id, customer_state = random.choice(customer_data)
-        sale_date = str(fake.date_between(start_date='-1y', end_date='today'))
+        sale_date = str(fake.date_between(start_date='-5y', end_date='today'))
+        sale_datetime = pd.Timestamp(sale_date)
+        sale_day = sale_datetime.strftime("%A")
+        sale_month = sale_datetime.strftime("%m")
+
         quantity = random.randint(1, 5)
         total_price = round(random.uniform(20, 500), 2)
         channel = random.choice(['Online', 'In-Store'])
 
+        # Apply temporal multipliers
+        daily_multiplier = daily_variation.get(sale_day, 1.0)
+        monthly_multiplier = monthly_variation.get(sale_month, 1.0)
+        seasonal_multiplier = generate_seasonal_multiplier()  # Add seasonal variability
+        trend_multiplier = simulate_trend(sale_date)
+        economic_fluctuation = economic_multiplier(sale_date)
+
+        total_price *= daily_multiplier * monthly_multiplier * seasonal_multiplier * trend_multiplier * economic_fluctuation
+
+        # Assign a customer segment
+        customer_segment = random.choice(customer_segments)
+        customer_multiplier = customer_segment_multiplier(customer_segment)
+
+        # Apply customer segment multiplier to the total price
+        total_price *= customer_multiplier
+
         if channel == 'In-Store':
-            # Select an employee based on weighted position types
             employee_store_weighted = random.choices(
                 employee_store_pairs, 
-                weights=[position_weights[emp[2]] for emp in employee_store_pairs],  # Weights based on employee position
+                weights=[position_weights[emp[2]] for emp in employee_store_pairs],
                 k=1
             )[0]
             employee_id, store_id, _ = employee_store_weighted
 
             # Ensure the customer is from the same state as the store for in-store sales
-            while customer_state not in states:  # Reassign customer if they aren't from the store's state
+            while customer_state not in states:
                 customer_id, customer_state = random.choice(customer_data)
+            
+            # Apply scaling factor based on store
+            total_price *= store_scaling_factors[store_id]
             heard_about_us = None
         else:
-            # Use dummy store and dummy employee for online sales
+            # Use dummy store and employee for online sales
             store_id = dummy_store_id
             employee_id = dummy_employee_id
             heard_about_us = random.choice(heard_about_us_options)
