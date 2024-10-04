@@ -4,8 +4,9 @@ import pandas as pd
 from faker import Faker
 from utils import get_db_connection
 
+random.seed(42)
 fake = Faker()
-
+fake.seed_instance(42)
 us_states = [
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 
     'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 

@@ -5,7 +5,9 @@ from faker.providers import address
 import random
 
 # initialize Faker
+random.seed(42)
 fake = Faker()
+fake.seed_instance(42)
 
 # BrewMaster Stores
 cities = ['New York', 'Austin', 'San Francisco', 'Denver', 'Seattle', 'Portland']
