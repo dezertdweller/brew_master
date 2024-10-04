@@ -1,3 +1,4 @@
+![cover-photo](https://github.com/dezertdweller/brew_master/blob/main/assets/cover-photo.png)
 # BrewMaster Supply - Sales and Marketing Performance Tracker
 
 BrewMaster Supply is a fictional company that specializes in selling craft beer brewing kits, supplies, and ingredients to home brewers. This project simulates the company's business operations, tracking store sales, employee performance, customer interactions, marketing campaigns, and sales data.
