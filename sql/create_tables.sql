@@ -1,5 +1,5 @@
 CREATE TABLE Stores (
-    store_id SERIAL PRIMARY KEY,
+    store_id INT PRIMARY KEY, 
     store_name VARCHAR(100) NOT NULL,
     city VARCHAR(50) NOT NULL,
     state VARCHAR(50) NOT NULL
@@ -26,7 +26,7 @@ CREATE TABLE Customers (
     last_name VARCHAR(50),
     email VARCHAR(100),
     city VARCHAR(50),
-    state VARCHAR(50),
+    state VARCHAR(50)
 );
 
 CREATE TABLE Sales (
@@ -34,12 +34,12 @@ CREATE TABLE Sales (
     product_id INT REFERENCES Products(product_id),
     store_id INT REFERENCES Stores(store_id),
     customer_id INT REFERENCES Customers(customer_id),
-    employee_id INT REFERENCES Employees(employee_id),
     sale_date DATE NOT NULL,
     quantity INT NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
     channel VARCHAR(50) NOT NULL,
-    heard_about_us VARCHAR(100)
+    heard_about_us VARCHAR(100),
+    sales_associate_id INT REFERENCES Employees(employee_id)
 );
 
 CREATE TABLE Marketing_Campaigns (
@@ -56,4 +56,3 @@ CREATE TABLE Marketing_Spend (
     date DATE NOT NULL,
     amount DECIMAL(10, 2) NOT NULL
 );
-

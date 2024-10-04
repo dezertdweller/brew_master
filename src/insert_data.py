@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from utils import get_db_connection
 
@@ -15,9 +16,11 @@ def insert_data(table_name, df):
     insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
 
     try:
+        print(f"Inserting data into {table_name}...")
         for i, row in df.iterrows():
             cursor.execute(insert_query, row.to_dict())
         conn.commit()
+        print(f"Data inserted into {table_name} successfully!")
     except Exception as e:
         print(f"Error inserting data into {table_name}: {e}")
         conn.rollback()
@@ -26,33 +29,29 @@ def insert_data(table_name, df):
         conn.close()
 
 if __name__ == "__main__":
-    # Load CSV files
-    data_path = "../data/generated_data/"
-    
-    # Insert Stores data
-    df_stores = pd.read_csv(f"{data_path}/stores.csv")
-    insert_data("Stores", df_stores)
+    # Define the base directory as the parent directory of the current file
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Parent directory of src
+    data_path = os.path.join(base_dir, 'data/generated_data/')  # Absolute path to data directory
 
-    # Insert Products data
-    df_products = pd.read_csv(f"{data_path}/products.csv")
-    insert_data("Products", df_products)
+    # Load CSV files and insert into respective tables
+    try:
+        df_stores = pd.read_csv(os.path.join(data_path, 'stores.csv'))
+        insert_data("Stores", df_stores)
 
-    # Insert Employees data
-    df_employees = pd.read_csv(f"{data_path}/employees.csv")
-    insert_data("Employees", df_employees)
+        df_products = pd.read_csv(os.path.join(data_path, 'products.csv'))
+        insert_data("Products", df_products)
 
-    # Insert Customers data
-    df_customers = pd.read_csv(f"{data_path}/customers.csv")
-    insert_data("Customers", df_customers)
+        df_employees = pd.read_csv(f"{data_path}/employees.csv")
+        insert_data("Employees", df_employees)
 
-    # Insert Marketing Campaigns data
-    df_campaigns = pd.read_csv(f"{data_path}/marketing_campaigns.csv")
-    insert_data("Marketing_Campaigns", df_campaigns)
+        df_customers = pd.read_csv(os.path.join(data_path, 'customers.csv'))
+        insert_data("Customers", df_customers)
 
-    # Insert Marketing Spend data
-    df_spend = pd.read_csv(f"{data_path}/marketing_spend.csv")
-    insert_data("Marketing_Spend", df_spend)
+        df_campaigns = pd.read_csv(os.path.join(data_path, 'marketing_campaigns.csv'))
+        insert_data("Marketing_Campaigns", df_campaigns)
 
-    # Insert Sales data (this could take longer due to large volume)
-    df_sales = pd.read_csv(f"{data_path}/sales.csv")
-    insert_data("Sales", df_sales)
+        df_spend = pd.read_csv(os.path.join(data_path, 'marketing_spend.csv'))
+        insert_data("Marketing_Spend", df_spend)
+
+    except Exception as e:
+        print(f"An error occurred during data insertion: {e}")
