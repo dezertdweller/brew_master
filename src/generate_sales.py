@@ -250,7 +250,7 @@ if __name__ == "__main__":
     data_path = os.path.join(base_dir, '../data/generated_data')
 
     # Generate the sales data based on what's in the database
-    df_sales = generate_sales_data(1000000)  # Generate 1000 sales
+    df_sales = generate_sales_data(3000000)  # Generate 3M sales
 
     # Save to CSV for further insertion
     df_sales.to_csv(os.path.join(data_path, 'sales.csv'), index=False)
