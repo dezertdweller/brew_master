@@ -184,7 +184,7 @@ def generate_sales_data(num_sales=100):
     for _ in range(num_sales):
         product_id = random.choice(product_ids)
         customer_id, customer_state = random.choice(customer_data)
-        sale_date = str(fake.date_between(start_date='-5y', end_date='today'))
+        sale_date = str(fake.date_between(start_date='-7d', end_date='today'))
         sale_datetime = pd.Timestamp(sale_date)
         sale_day = sale_datetime.strftime("%A")
         sale_month = sale_datetime.strftime("%m")
