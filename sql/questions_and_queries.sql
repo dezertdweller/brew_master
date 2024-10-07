@@ -57,11 +57,11 @@ SELECT month, total_revenue, store_name,
 		LAG (total_revenue) OVER(PARTITION BY store_name
 								 ORDER BY month ASC) AS last_month,
 		LAG (total_revenue) OVER(PARTITION BY store_name
-								 ORDER BY month ASC) - total_revenue AS change_in_rev,
+			ORDER BY month ASC) - total_revenue AS change_in_rev,
 		ROUND((LAG (total_revenue) OVER(PARTITION BY store_name
-								   		ORDER BY month ASC) - total_revenue) /
-			   LAG (total_revenue) OVER(PARTITION BY store_name
-									    ORDER BY month ASC) * 100) AS perc_change
+			ORDER BY month ASC) - total_revenue) /
+			LAG (total_revenue) OVER(PARTITION BY store_name
+			ORDER BY month ASC) * 100) AS perc_change
 FROM monthly_sales;
 
 -- 7. Which city has the most customers?
@@ -88,13 +88,28 @@ LIMIT 1;
 
 
 -- 10. What is the average sales revenue per sales associate by store?
-
+SELECT e.first_name || ' ' || e.last_name AS employee_name, ROUND(AVG(s.total_price), 2) AS avg_sale_per_employee, st.store_name, e.hire_date
+FROM sales AS s
+JOIN employees as e
+ON s.sales_associate_id = e.employee_id
+JOIN stores as st
+ON s.store_id = st.store_id
+GROUP BY employee_name, store_name, e.hire_date
+ORDER BY store_name DESC, avg_sale_per_employee DESC;
 
 -- 11. What is the average price of products in each category?
-
+SELECT category, ROUND(AVG(price), 2) AS avg_price
+FROM products
+GROUP BY category;
 
 -- 12. How does product pricing vary by category?
-
+SELECT category, 
+    ROUND(AVG(price), 2) AS avg_price, 
+    ROUND(STDDEV(price), 2) AS std_dev,
+	MIN(price) AS min,
+	MAX(price) AS max
+FROM products
+GROUP BY category;
 
 -- 13. Which marketing campaign resulted in the highest total sales?
 
