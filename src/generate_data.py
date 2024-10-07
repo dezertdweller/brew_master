@@ -3,6 +3,7 @@ import pandas as pd
 from faker import Faker
 from faker.providers import address
 import random
+from datetime import datetime
 
 # initialize Faker
 random.seed(42)
@@ -13,22 +14,33 @@ fake.seed_instance(42)
 cities = ['New York', 'Austin', 'San Francisco', 'Denver', 'Seattle', 'Portland']
 states = ['NY', 'TX', 'CA', 'CO', 'WA', 'OR']
 
+store_opening_dates = {
+    'Seattle': '2019-01-01',
+    'Portland': '2019-06-01',
+    'San Francisco': '2021-01-01',
+    'New York': '2021-05-01',
+    'Denver': '2022-10-01',
+    'Austin': '2023-04-01'
+}
+
 def generate_store_data():
     stores = []
-    for i in range(len(cities)):
+    for i, city in enumerate(cities):
         stores.append({
-            'store_id': i + 1,  # Generate store_id starting from 1
-            'store_name': f"BrewMasters {cities[i]}",
-            'city': cities[i],
-            'state': states[i]
+            'store_id': i + 1,
+            'store_name': f"BrewMasters {city}",
+            'city': city,
+            'state': states[i],
+            'opening_date': store_opening_dates[city]  # Assign opening date
         })
     
-    # Add dummy store for online sales with next store_id
+    # Add dummy store for online sales
     stores.append({
-        'store_id': 9999,  # Dummy store gets the next store_id
+        'store_id': 9999,
         'store_name': "BrewMasters Online",
         'city': "N/A",
-        'state': "N/A"
+        'state': "N/A",
+        'opening_date': '2019-01-01'  # Online store is always open
     })
 
     return pd.DataFrame(stores)
@@ -71,27 +83,57 @@ positions = {
 }
 # Gender distribution: 70% Male/Female, 30% other options
 genders = ["Male", "Female", "Non-Binary", "Other", "Didn't Report"]
-gender_weights = [0.35, 0.35, 0.10, 0.10, 0.10]  # 70% for Male/Female, 30% for others
+gender_weights = [0.40, 0.40, 0.05, 0.02, 0.03]
 
 # Age range for employees
 age_range = (20, 65)
 
-def generate_employees(num_employees=20):
+def generate_employees(store_open_dates, current_year='2024', growth_rate=2):
     employees = []
-    store_ids = list(range(1, len(cities) + 1))
+    
+    for store in store_open_dates:
+        opening_date = store_open_dates[store]
+        store_id = cities.index(store) + 1
+        store_opening_year = datetime.strptime(opening_date, "%Y-%m-%d").year
 
-    # Ensure each store has at least one employee per position
-    for store_id in store_ids:
         for position, salary_range in positions.items():
             employees.append({
                 'first_name': fake.first_name(),
                 'last_name': fake.last_name(),
                 'position': position,
                 'store_id': store_id,
-                'age': random.randint(*age_range),  # Generate age within range
-                'gender': random.choices(genders, weights=gender_weights)[0],  # Randomly assign gender
-                'salary': round(random.uniform(*salary_range), 2)  # Randomly assign salary from position's range
-            })
+                'age': random.randint(*age_range),
+                'gender': random.choices(genders, weights=gender_weights)[0],
+                'salary': round(random.uniform(*salary_range), 2),
+                'hire_date': opening_date
+                })
+
+        # Calculate the number of years the store has been open
+        current_year_int = int(current_year)
+        years_open = current_year_int - store_opening_year
+        
+        # Add gradual employee growth for each year since opening
+        for year in range(1, years_open + 1):
+            hire_year = store_opening_year + year
+            hire_date_start = datetime.strptime(f"{hire_year}-01-01", "%Y-%m-%d")
+            hire_date_end = datetime.strptime(f"{hire_year}-12-31", "%Y-%m-%d")
+            
+            # Add a certain number of employees based on the growth rate
+            num_new_employees = random.randint(1, growth_rate)  # Randomly add 1 to 'growth_rate' employees per year
+            for _ in range(num_new_employees):
+                position = random.choice(list(positions.keys()))  # Randomly assign a position
+                salary_range = positions[position]
+                
+                employees.append({
+                    'first_name': fake.first_name(),
+                    'last_name': fake.last_name(),
+                    'position': position,
+                    'store_id': store_id,
+                    'age': random.randint(*age_range),
+                    'gender': random.choices(genders, weights=gender_weights)[0],
+                    'salary': round(random.uniform(*salary_range), 2),
+                    'hire_date': fake.date_between_dates(hire_date_start, hire_date_end)  # Hire date within the year
+                })
 
     # Add dummy employee with 'No Sales Associate' position
     employees.append({
@@ -101,7 +143,8 @@ def generate_employees(num_employees=20):
         'store_id': 9999,
         'age': 9999,
         'gender': "N/A",
-        'salary': 0  # Dummy employee with no salary
+        'salary': 0,
+        'hire_date': '2000-01-01'
     })
 
     # Create DataFrame
@@ -116,31 +159,83 @@ us_states = [
     'WI', 'WY'
 ]
 
-# BrewMaster Customers
-def generate_customer_data(num_customers=5000, online_customers_ratio=0.65):
+# Cities to target with increased online sales before store openings
+online_boost_cities = {
+    'San Francisco': '2020',
+    'New York': '2020',
+    'Denver': '2021',
+    'Austin': '2022'
+}
+
+# Add corresponding states for the targeted cities
+city_state_map = {
+    'San Francisco': 'CA',
+    'New York': 'NY',
+    'Denver': 'CO',
+    'Austin': 'TX'
+}
+
+# BrewMaster Customers with year-based growth
+def generate_customer_data(start_year=2019, end_year=2023, online_customers_ratio=0.65, base_customers_per_year=1000, online_boost=0.15):
     customers = []
-    num_online_customers = int(num_customers * online_customers_ratio)
-    num_store_customers = num_customers - num_online_customers
+    
+    # Generate customers for each year in the range
+    for year in range(start_year, end_year + 1):
+        num_customers = base_customers_per_year * (1 + (year - start_year) * 0.1)  # Simulate growth over time
+        num_online_customers = int(num_customers * online_customers_ratio)
+        num_store_customers = int(num_customers * (1 - online_customers_ratio))
 
-    # Step 1: Generate customers for in-store sales (states where stores are located)
-    for _ in range(num_store_customers):
-        customers.append({
-            'first_name': fake.first_name(),
-            'last_name': fake.last_name(),
-            'email': fake.email(),
-            'city': fake.city(),
-            'state': random.choice(states)  # States where stores are located
-        })
+        # Step 1: Generate customers for in-store sales (only for stores that have opened by this year)
+        open_stores = [city for city, open_date in store_opening_dates.items() if datetime.strptime(open_date, '%Y-%m-%d').year <= year]
+        open_states = [states[cities.index(city)] for city in open_stores]  # Corresponding states
 
-    # Step 2: Generate customers for online sales (from any state in the US)
-    for _ in range(num_online_customers):
-        customers.append({
-            'first_name': fake.first_name(),
-            'last_name': fake.last_name(),
-            'email': fake.email(),
-            'city': fake.city(),
-            'state': random.choice(us_states)  # Any US state
-        })
+        for _ in range(num_store_customers):
+            if open_states:  # Only generate in-store customers if stores are open
+                customers.append({
+                    'first_name': fake.first_name(),
+                    'last_name': fake.last_name(),
+                    'email': fake.email(),
+                    'city': fake.city(),
+                    'state': random.choice(open_states),  # Only states with open stores
+                    'customer_type': 'In-Store',
+                    'signup_year': year
+                })
+
+        # Step 2: Generate customers for online sales (from any state in the US)
+        for _ in range(num_online_customers):
+            # Check if we should boost online customers from specific cities
+            boosted_city = None
+            if str(year) in [boost_year for boost_year in online_boost_cities.values()]:
+                # Pick the corresponding city and boost its chances
+                for city, boost_year in online_boost_cities.items():
+                    if str(year) == boost_year:
+                        # Apply the boost for this city
+                        if random.random() < online_boost:  # Apply a 15% boost chance
+                            boosted_city = city
+                            break
+
+            if boosted_city:
+                # Boosted online customer from the target city
+                customers.append({
+                    'first_name': fake.first_name(),
+                    'last_name': fake.last_name(),
+                    'email': fake.email(),
+                    'city': boosted_city,
+                    'state': city_state_map[boosted_city],
+                    'customer_type': 'Online',
+                    'signup_year': year
+                })
+            else:
+                # Regular online customer
+                customers.append({
+                    'first_name': fake.first_name(),
+                    'last_name': fake.last_name(),
+                    'email': fake.email(),
+                    'city': fake.city(),
+                    'state': random.choice(us_states),  # Any US state
+                    'customer_type': 'Online',
+                    'signup_year': year
+                })
 
     return pd.DataFrame(customers)
 
@@ -162,7 +257,7 @@ def generate_marketing_campaign_data(num_campaigns=10):
     campaigns = []
     for campaign_name in campaign_names:
         campaign_name = f"{campaign_name} Campaign" 
-        start_date = fake.date_between(start_date='-1y', end_date='today')
+        start_date = fake.date_between(start_date='-5y', end_date='today')
         end_date = fake.date_between(start_date=start_date, end_date='+30d')
         budget = round(random.uniform(5000, 50000), 0)
         
@@ -209,8 +304,8 @@ def generate_marketing_spend_data(df_campaigns, num_spend_entries=50):
 if __name__ == "__main__":
     df_stores = generate_store_data()
     df_products = generate_product_data()
-    df_employees = generate_employees(20)
-    df_customers = generate_customer_data(5000)
+    df_employees = generate_employees(store_opening_dates, current_year='2024', growth_rate=2)
+    df_customers = generate_customer_data(start_year=2019, end_year=2023, online_customers_ratio=0.65, base_customers_per_year=1000, online_boost=0.15)
     df_campaigns = generate_marketing_campaign_data(10)
     df_spend = generate_marketing_spend_data(df_campaigns, 50)
 

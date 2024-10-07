@@ -124,33 +124,33 @@ def fetch_dummy_employee_id():
     conn.close()
     return dummy_employee_id
 
-# Fetch store IDs from the database
-def fetch_store_ids():
+def fetch_store_data():
     conn = get_db_connection()
     if not conn:
         return []
 
     cursor = conn.cursor()
-    cursor.execute("SELECT store_id FROM Stores WHERE store_id != 9999;")  # Exclude dummy store
-    store_ids = [row[0] for row in cursor.fetchall()]
+    # Fetch store_id and opening_date from the Stores table
+    cursor.execute("SELECT store_id, opening_date FROM Stores WHERE store_id != 9999;")  # Exclude dummy store
+    store_data = {row[0]: row[1] for row in cursor.fetchall()}  # Return as a dictionary {store_id: opening_date}
 
     cursor.close()
     conn.close()
-    return store_ids
+    return store_data
 
 # Fetch product IDs from the database
-def fetch_product_ids():
+def fetch_product_data():
     conn = get_db_connection()
     if not conn:
         return []
 
     cursor = conn.cursor()
-    cursor.execute("SELECT product_id FROM Products;")
-    product_ids = [row[0] for row in cursor.fetchall()]
+    cursor.execute("SELECT product_id, price FROM Products;")
+    product_data = {row[0]: row[1] for row in cursor.fetchall()}
 
     cursor.close()
     conn.close()
-    return product_ids
+    return product_data
 
 
 # Generate sales data
@@ -158,8 +158,9 @@ def generate_sales_data(num_sales=100):
     sales = []
 
     # Fetch employee-store pairs, product_ids, and customer data
+    store_data = fetch_store_data()
     employee_store_pairs = fetch_employee_store_pairs()
-    product_ids = fetch_product_ids()
+    product_data = fetch_product_data()
     customer_data = fetch_customer_data()  # (customer_id, state) tuples
     dummy_employee_id = fetch_dummy_employee_id()
 
@@ -182,66 +183,85 @@ def generate_sales_data(num_sales=100):
         return np.random.uniform(0.5, 1.8)
 
     for _ in range(num_sales):
-        product_id = random.choice(product_ids)
+        product_id = random.choice(list(product_data.keys()))
+        product_price = product_data[product_id]
         customer_id, customer_state = random.choice(customer_data)
         sale_date = str(fake.date_between(start_date='-5y', end_date='today'))
         sale_datetime = pd.Timestamp(sale_date)
         sale_day = sale_datetime.strftime("%A")
         sale_month = sale_datetime.strftime("%m")
 
-        quantity = random.randint(1, 5)
-        total_price = round(random.uniform(20, 500), 2)
-        channel = random.choice(['Online', 'In-Store'])
+        # Check if store is open based on the sale date
+        store_id = None
+        for store, opening_date in store_data.items():
+            if pd.Timestamp(sale_date) >= pd.Timestamp(opening_date):
+                store_id = store
+                break
 
-        # Apply temporal multipliers
-        daily_multiplier = daily_variation.get(sale_day, 1.0)
-        monthly_multiplier = monthly_variation.get(sale_month, 1.0)
-        seasonal_multiplier = generate_seasonal_multiplier()  # Add seasonal variability
-        trend_multiplier = simulate_trend(sale_date)
-        economic_fluctuation = economic_multiplier(sale_date)
+        # Continue only if store is open or if it’s an online sale
+        if store_id is not None:
+            quantity = random.randint(1, 5)
+            # Apply temporal, seasonal, and economic multipliers to add variability
+            daily_multiplier = daily_variation.get(sale_day, 1.0)
+            monthly_multiplier = monthly_variation.get(sale_month, 1.0)
+            seasonal_multiplier = generate_seasonal_multiplier()
+            trend_multiplier = simulate_trend(sale_date)
+            economic_fluctuation = economic_multiplier(sale_date)
 
-        total_price *= daily_multiplier * monthly_multiplier * seasonal_multiplier * trend_multiplier * economic_fluctuation
+            # Calculate new quantity
+            quantity = round(quantity * daily_multiplier * monthly_multiplier * seasonal_multiplier * trend_multiplier * economic_fluctuation)
 
-        # Assign a customer segment
-        customer_segment = random.choice(customer_segments)
-        customer_multiplier = customer_segment_multiplier(customer_segment)
-
-        # Apply customer segment multiplier to the total price
-        total_price *= customer_multiplier
-
-        if channel == 'In-Store':
-            employee_store_weighted = random.choices(
-                employee_store_pairs, 
-                weights=[position_weights[emp[2]] for emp in employee_store_pairs],
-                k=1
-            )[0]
-            employee_id, store_id, _ = employee_store_weighted
-
-            # Ensure the customer is from the same state as the store for in-store sales
-            while customer_state not in states:
-                customer_id, customer_state = random.choice(customer_data)
+            # Ensure quantity is at least 1
+            if quantity < 1:
+                quantity = 1
             
-            # Apply scaling factor based on store
-            total_price *= store_scaling_factors[store_id]
-            heard_about_us = None
-        else:
-            # Use dummy store and employee for online sales
-            store_id = dummy_store_id
-            employee_id = dummy_employee_id
-            heard_about_us = random.choice(heard_about_us_options)
+            # Assign a customer segment
+            customer_segment = random.choice(customer_segments)
+            customer_multiplier = customer_segment_multiplier(customer_segment)
 
-        # Append the sale data to the sales list
-        sales.append({
-            'product_id': product_id,
-            'store_id': store_id,
-            'customer_id': customer_id,
-            'sale_date': sale_date,
-            'quantity': quantity,
-            'total_price': total_price,
-            'channel': channel,
-            'heard_about_us': heard_about_us,
-            'sales_associate_id': employee_id
-        })
+            # Apply customer segment multiplier to the quantity
+            quantity = round(quantity * customer_multiplier)
+
+            # Apply customer segment multiplier to the total price
+            total_price = product_price * quantity
+
+            # Assign random channel
+            channel = random.choice(['Online', 'In-Store'])
+
+            if channel == 'In-Store':
+                employee_store_weighted = random.choices(
+                    employee_store_pairs, 
+                    weights=[position_weights[emp[2]] for emp in employee_store_pairs],
+                    k=1
+                )[0]
+                employee_id, store_id, _ = employee_store_weighted
+
+                # Ensure the customer is from the same state as the store for in-store sales
+                while customer_state not in states:
+                    customer_id, customer_state = random.choice(customer_data)
+                
+                # Apply scaling factor based on store
+                quantity = round(quantity * store_scaling_factors[store_id])
+                total_price = quantity * product_price
+                heard_about_us = None
+            else:
+                # Use dummy store and employee for online sales
+                store_id = dummy_store_id
+                employee_id = dummy_employee_id
+                heard_about_us = random.choice(heard_about_us_options)
+
+            # Append the sale data to the sales list
+            sales.append({
+                'product_id': product_id,
+                'store_id': store_id,
+                'customer_id': customer_id,
+                'sale_date': sale_date,
+                'quantity': quantity,
+                'total_price': total_price,
+                'channel': channel,
+                'heard_about_us': heard_about_us,
+                'sales_associate_id': employee_id
+            })
 
     return pd.DataFrame(sales)
 
