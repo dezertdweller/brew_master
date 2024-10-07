@@ -1,6 +1,6 @@
 -- BrewMasters Supply Data Analysis Queries
 
--- 1. What are the top 5 stores by total sales revenue?
+-- 1. What are the stores ordered by total sales revenue in descending order?
 
 
 -- 2. Which store has the highest sales volume (in terms of quantity sold)?

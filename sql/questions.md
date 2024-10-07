@@ -6,7 +6,7 @@ As the VP of Sales at BrewMasters, we want to gather valuable insights from our 
 ---
 
 ### 1. Store Performance
-- **Q1:** What are the top 5 stores by total sales revenue?
+- **Q1:** What are the stores ordered by total sales revenue in descending order?
 - **Q2:** Which store has the highest sales volume (in terms of quantity sold)?
 
 ### 2. Product Performance
