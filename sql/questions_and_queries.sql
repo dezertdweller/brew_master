@@ -1,30 +1,90 @@
 -- BrewMasters Supply Data Analysis Queries
 
 -- 1. What are the stores ordered by total sales revenue in descending order?
-
+SELECT st.store_name, SUM(s.total_price) AS total_sales
+FROM sales AS s
+INNER JOIN stores as st
+ON s.store_id = st.store_id
+GROUP BY st.store_name
+ORDER BY total_sales DESC;
 
 -- 2. Which store has the highest sales volume (in terms of quantity sold)?
-
+SELECT st.store_name, SUM(s.quantity) AS total_units
+FROM sales AS s
+INNER JOIN stores as st
+ON s.store_id = st.store_id
+GROUP BY st.store_name
+ORDER BY total_units DESC
+LIMIT 1;
 
 -- 3. What are the top 5 best-selling products in terms of revenue?
-
+SELECT p.product_name, SUM(s.total_price) AS total_sales
+FROM sales AS s
+JOIN products AS p
+ON s.product_id = p.product_id
+GROUP BY product_name
+ORDER BY total_sales DESC
+LIMIT 5;
 
 -- 4. What are the most popular products (based on quantity sold)?
-
+SELECT p.product_name, SUM(s.quantity) AS total_units
+FROM sales AS s
+JOIN products AS p
+ON s.product_id = p.product_id
+GROUP BY product_name
+ORDER BY total_units DESC
+LIMIT 5;
 
 -- 5. What are the total sales by month for each store?
+SELECT EXTRACT(MONTH FROM s.sale_date) AS month, SUM(s.total_price) AS total_sales, st.store_name
+FROM sales AS s
+JOIN stores AS st
+ON s.store_id = st.store_id
+GROUP BY EXTRACT(MONTH FROM s.sale_date), store_name
+ORDER BY month ASC, total_sales DESC;
 
 
 -- 6. How has revenue trended over the past year for each store?
+WITH monthly_sales AS (
+	SELECT EXTRACT(MONTH FROM s.sale_date) AS month, SUM(s.total_price) AS total_revenue, st.store_name
+	FROM sales AS s
+	JOIN stores AS st
+	ON s.store_id = st.store_id
+	WHERE s.sale_date BETWEEN '2023-10-07' AND '2024-10-07'
+	GROUP BY EXTRACT(MONTH FROM s.sale_date), store_name)
 
+SELECT month, total_revenue, store_name,
+		LAG (total_revenue) OVER(PARTITION BY store_name
+								 ORDER BY month ASC) AS last_month,
+		LAG (total_revenue) OVER(PARTITION BY store_name
+								 ORDER BY month ASC) - total_revenue AS change_in_rev,
+		ROUND((LAG (total_revenue) OVER(PARTITION BY store_name
+								   		ORDER BY month ASC) - total_revenue) /
+			   LAG (total_revenue) OVER(PARTITION BY store_name
+									    ORDER BY month ASC) * 100) AS perc_change
+FROM monthly_sales;
 
 -- 7. Which city has the most customers?
+SELECT state,  COUNT(customer_id) AS count
+FROM customers
+GROUP BY state
+ORDER BY count DESC
+LIMIT 1;
 
 
 -- 8. Which state has the highest number of customers?
-
+SELECT state,  COUNT(customer_id) AS count
+FROM customers
+GROUP BY state
+ORDER BY count DESC
+LIMIT 1;
 
 -- 9. Which sales associate has the highest total sales (revenue generated)?
+SELECT city,  COUNT(customer_id) AS count
+FROM customers
+GROUP BY city
+ORDER BY count DESC
+LIMIT 1;
 
 
 -- 10. What is the average sales revenue per sales associate by store?
