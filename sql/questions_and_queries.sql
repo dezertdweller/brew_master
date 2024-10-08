@@ -118,7 +118,12 @@ GROUP BY category;
 
 
 -- 15. What percentage of total revenue comes from each sales channel (e.g., online vs. in-store)?
-
+SELECT channel, COUNT(sale_id) AS count_per_channel, 
+    ROUND(COUNT(sale_id) * 100 / SUM(COUNT(*)) OVER(), 2) AS perc_total_sales,
+	SUM(total_price) AS rev_per_channel,
+	ROUND(SUM(total_price) * 100 / SUM(SUM(total_price)) OVER(), 2) AS perc_total_rev
+FROM sales
+GROUP BY channel;
 
 -- 16. How does sales performance differ by channel for each store?
 
