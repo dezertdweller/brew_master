@@ -152,6 +152,34 @@ def fetch_product_data():
     conn.close()
     return product_data
 
+campaign_names = {
+    "Brew Your Passion, Perfect Your Craft!": 0.2,
+    "Craft Your Own Beer, One Kit at a Time!": 0.0,
+    "From Grain to Glass—Brew Like a Master!": 0.0,
+    "Unleash Your Inner Brewer with Our Premium Kits!": 0.025,
+    "Brew Bold, Brew Better with BrewMasters!": 0.0,
+    "Your Homebrew Journey Starts Here!": 0.0,
+    "Fresh Ingredients, Perfect Brews—Every Time!": 0.5,
+    "Brew Like a Pro—Right in Your Kitchen!": 0.25,
+    "Tap into the Art of Home Brewing!": 0.05,
+    "Master the Craft of Beer Making with BrewMasters!": 0.0
+}
+
+# Fetch campaign IDs and dates from the database
+def fetch_campaign_data():
+    """Fetch customer_id and state pairs from the database."""
+    conn = get_db_connection()
+    if not conn:
+        return []
+
+    cursor = conn.cursor()
+    # Query the database to get the campaign_id, campaign_name, start_date, end_date
+    cursor.execute("SELECT campaign_id, campaign_name, start_date, end_date FROM marketing_campaigns;")
+    campaign_data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return campaign_data
 
 # Generate sales data
 def generate_sales_data(num_sales=100):
@@ -163,6 +191,7 @@ def generate_sales_data(num_sales=100):
     product_data = fetch_product_data()
     customer_data = fetch_customer_data()  # (customer_id, state) tuples
     dummy_employee_id = fetch_dummy_employee_id()
+    campaign_data = fetch_campaign_data()
 
     # Dummy store for online sales
     dummy_store_id = 9999
@@ -187,7 +216,7 @@ def generate_sales_data(num_sales=100):
         product_price = product_data[product_id]
         customer_id, customer_state = random.choice(customer_data)
         sale_date = str(fake.date_between(start_date='-5y', end_date='today'))
-        sale_datetime = pd.Timestamp(sale_date)
+        sale_datetime = pd.Timestamp(sale_date).date()
         sale_day = sale_datetime.strftime("%A")
         sale_month = sale_datetime.strftime("%m")
 
@@ -222,11 +251,19 @@ def generate_sales_data(num_sales=100):
             # Apply customer segment multiplier to the quantity
             quantity = round(quantity * customer_multiplier)
 
+            # Apply campaign boost if the sale date falls within any campaign period
+            for campaign_id, campaign_name, start_date, end_date in campaign_data:
+                if start_date <= sale_datetime <= end_date:
+                    # Apply campaign weight to the quantity
+                    campaign_weight = campaign_names.get(campaign_name, 0.0)
+                    quantity = round(quantity * (1 + campaign_weight))
+
             # Apply customer segment multiplier to the total price
             total_price = product_price * quantity
 
             # Assign random channel
-            channel = random.choice(['Online', 'In-Store'])
+            channels = ['Online', 'In-Store']
+            channel = random.choices(channels, weights=[0.30, 0.60], k=1)[0]
 
             if channel == 'In-Store':
                 employee_store_weighted = random.choices(

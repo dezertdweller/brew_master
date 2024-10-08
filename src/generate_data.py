@@ -240,22 +240,22 @@ def generate_customer_data(start_year=2019, end_year=2023, online_customers_rati
     return pd.DataFrame(customers)
 
 # Marketing Campaigns
-campaign_names = [
-    "Brew Your Passion, Perfect Your Craft!",
-    "Craft Your Own Beer, One Kit at a Time!",
-    "From Grain to Glass—Brew Like a Master!",
-    "Unleash Your Inner Brewer with Our Premium Kits!",
-    "Brew Bold, Brew Better with BrewMasters!",
-    "Your Homebrew Journey Starts Here!",
-    "Fresh Ingredients, Perfect Brews—Every Time!",
-    "Brew Like a Pro—Right in Your Kitchen!",
-    "Tap into the Art of Home Brewing!",
-    "Master the Craft of Beer Making with BrewMasters!"
-]
+campaign_names = {
+    "Brew Your Passion, Perfect Your Craft!": 0.2,
+    "Craft Your Own Beer, One Kit at a Time!": 0.0,
+    "From Grain to Glass—Brew Like a Master!": 0.0,
+    "Unleash Your Inner Brewer with Our Premium Kits!": 0.025,
+    "Brew Bold, Brew Better with BrewMasters!": 0.0,
+    "Your Homebrew Journey Starts Here!": 0.0,
+    "Fresh Ingredients, Perfect Brews—Every Time!": 0.5,
+    "Brew Like a Pro—Right in Your Kitchen!": 0.25,
+    "Tap into the Art of Home Brewing!": 0.05,
+    "Master the Craft of Beer Making with BrewMasters!": 0.0
+}
 
 def generate_marketing_campaign_data(num_campaigns=10):
     campaigns = []
-    for campaign_name in campaign_names:
+    for campaign_name, weight in campaign_names.items():
         campaign_name = f"{campaign_name} Campaign" 
         start_date = fake.date_between(start_date='-5y', end_date='today')
         end_date = fake.date_between(start_date=start_date, end_date='+30d')
