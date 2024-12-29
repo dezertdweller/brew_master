@@ -10,7 +10,7 @@ WITH ranked_products AS(
     SELECT 
         store_name,
         product_name,
-        RANK() OVER(PARTITION BY store_name ORDER BY total_products_sold DESC)
+        RANK() OVER(PARTITION BY store_name ORDER BY total_products_sold DESC) AS product_rank
     FROM (
         SELECT 
             p.product_name,
@@ -57,8 +57,8 @@ SELECT
     month,
     year,
     monthly_revenue AS current_month_rev,
-    LAG(monthly_revenue) OVER (ORDER BY year, month) AS previous_month_rev,
-    monthly_revenue - LAG(monthly_revenue) OVER (ORDER BY year, month) AS monthly_change_rev,
+    COALESCE(LAG(monthly_revenue) OVER (ORDER BY year, month), 0) AS previous_month_rev,
+    COALESCE(monthly_revenue - LAG(monthly_revenue) OVER (ORDER BY year, month), 0) AS monthly_change_rev,
     SUM(monthly_revenue) OVER (PARTITION BY year ORDER BY year, month) AS cum_annual_sales
 FROM monthly_sales;
     
